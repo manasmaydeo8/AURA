@@ -251,8 +251,8 @@ GSTIN:         ${receipt.customer.gstin}
 --------------------------------------------------------------------------------
 ITEMIZED SELECTIONS LINKED FROM BAG:
 ${receipt.items
-  .map(
-    (item) => `
+      .map(
+        (item) => `
 [#${item.lineNumber}] ${item.name}
   Finish:    ${item.finish}
   Category:  ${item.category} (${item.space.toUpperCase()})
@@ -262,8 +262,8 @@ ${receipt.items
   Subtotal:  ₹${item.subtotal.toLocaleString('en-IN')}
   ${item.equityCreditAccrued ? `Buyout Equity Credit: 80% (₹${item.equityCreditAccrued.toLocaleString('en-IN')} towards ownership)` : 'Warranty: 5-Year Comprehensive Architectural Warranty'}
 `
-  )
-  .join('')}
+      )
+      .join('')}
 --------------------------------------------------------------------------------
 FINANCIAL BREAKDOWN:
 Monthly Rental Total:          ₹${receipt.summary.monthlyRentalTotal.toLocaleString('en-IN')}/mo
