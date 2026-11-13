@@ -17,14 +17,25 @@ export function FurnitureCard({
 
   const currentDisplayImage = activeFinish?.image || item.image
 
-  const handleAction = (e) => {
+  const handleRent = (e) => {
     e.stopPropagation()
     onAddToCart({
       item,
       selectedFinish: activeFinish,
-      mode,
-      tenureMonths: mode === 'rent' ? tenureMonths : null,
-      unitPrice: mode === 'rent' ? effectiveMonthlyRent : item.buyPrice,
+      mode: 'rent',
+      tenureMonths,
+      unitPrice: effectiveMonthlyRent,
+    })
+  }
+
+  const handleBuyout = (e) => {
+    e.stopPropagation()
+    onAddToCart({
+      item,
+      selectedFinish: activeFinish,
+      mode: 'buy',
+      tenureMonths: null,
+      unitPrice: item.buyPrice,
     })
   }
 
@@ -71,56 +82,67 @@ export function FurnitureCard({
         <h3 className="furniture-card__title">{item.name}</h3>
         <p className="furniture-card__tagline">{item.tagline}</p>
 
-        {mode === 'rent' ? (
-          <div className="furniture-card__pricing-box">
-            <div className="furniture-card__price-row">
-              <span className="furniture-card__price-label">Rental Rate</span>
-              <span className="furniture-card__price-val tabular-nums">
-                ₹{effectiveMonthlyRent}
-                <small>/mo</small>
-              </span>
+        {/* Architectural Pricing Module */}
+        <div className="furniture-card__pricing-card">
+          <div className="pricing-plan-columns">
+            <div className="pricing-plan-col">
+              <span className="pricing-plan-kicker">Rental Plan</span>
+              <div className="pricing-plan-val tabular-nums">
+                ₹{effectiveMonthlyRent.toLocaleString('en-IN')}
+                <span className="pricing-plan-unit">/mo</span>
+              </div>
             </div>
-            <div className="furniture-card__equity-hint">
-              <span className="equity-hint__pill">80% Buyout Credit</span>
-              <span className="equity-hint__text tabular-nums">
-                ₹{monthlyEquity}/mo builds toward ₹{item.buyPrice} buyout
-              </span>
-            </div>
-          </div>
-        ) : (
-          <div className="furniture-card__pricing-box">
-            <div className="furniture-card__price-row">
-              <span className="furniture-card__price-label">Outright Purchase</span>
-              <span className="furniture-card__price-val tabular-nums">
-                ₹{item.buyPrice}
-              </span>
-            </div>
-            <div className="furniture-card__equity-hint">
-              <span className="equity-hint__pill pill--neutral">Try Before Buying</span>
-              <span className="equity-hint__text tabular-nums">
-                Or rent from ₹{item.rentMonthly}/mo with buyout option
-              </span>
-            </div>
-          </div>
-        )}
 
+            <div className="pricing-plan-divider" aria-hidden="true" />
+
+            <div className="pricing-plan-col pricing-plan-col--right">
+              <span className="pricing-plan-kicker">Spot Buyout</span>
+              <div className="pricing-plan-val tabular-nums">
+                ₹{item.buyPrice.toLocaleString('en-IN')}
+              </div>
+            </div>
+          </div>
+
+          <div className="pricing-equity-ribbon">
+            <span className="equity-ribbon-tag">80% Credit</span>
+            <span className="equity-ribbon-copy tabular-nums">
+              ₹{monthlyEquity.toLocaleString('en-IN')}/mo builds to ownership
+            </span>
+          </div>
+        </div>
+
+        {/* Action CTAs: Dual Selection + Detail Link */}
         <div className="furniture-card__actions" onClick={(e) => e.stopPropagation()}>
+          <div className="card-dual-actions">
+            <button
+              type="button"
+              className="card-action-btn card-action-btn--rent"
+              onClick={handleRent}
+              title={`Rent ${item.name} at ₹${effectiveMonthlyRent.toLocaleString('en-IN')}/mo`}
+            >
+              <span className="card-action-btn__label">Rent Plan</span>
+              <span className="card-action-btn__sub tabular-nums">₹{effectiveMonthlyRent.toLocaleString('en-IN')}/mo</span>
+            </button>
+
+            <button
+              type="button"
+              className="card-action-btn card-action-btn--buyout"
+              onClick={handleBuyout}
+              title={`Buyout ${item.name} outright at ₹${item.buyPrice.toLocaleString('en-IN')}`}
+            >
+              <span className="card-action-btn__label">Spot Buyout</span>
+              <span className="card-action-btn__sub tabular-nums">₹{item.buyPrice.toLocaleString('en-IN')}</span>
+            </button>
+          </div>
+
           <button
             type="button"
-            className="btn btn--primary btn--full"
-            onClick={handleAction}
-          >
-            {mode === 'rent'
-              ? `Rent for ₹${effectiveMonthlyRent}/mo`
-              : `Buy Now (₹${item.buyPrice})`}
-          </button>
-          <button
-            type="button"
-            className="btn btn--outline"
+            className="card-detail-link-btn"
             onClick={() => onInspect(item, activeFinish)}
-            aria-label={`View full details of ${item.name}`}
+            aria-label={`View full details & payment QR for ${item.name}`}
           >
-            Explore
+            <span>View Details & Payment QR</span>
+            <span className="card-detail-link-arrow" aria-hidden="true">→</span>
           </button>
         </div>
 
@@ -133,4 +155,3 @@ export function FurnitureCard({
     </article>
   )
 }
-

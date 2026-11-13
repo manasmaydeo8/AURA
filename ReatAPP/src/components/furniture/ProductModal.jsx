@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react'
 import { FinishSelector } from './FinishSelector'
+import { PaymentQRCode } from '../payment/PaymentQRCode'
 import { RENTAL_TENURES } from '../../data/furniture'
 
 export function ProductModal({ item, initialFinish, onClose, onAddToCart }) {
   const [selectedFinish, setSelectedFinish] = useState(initialFinish || item.finishes[0])
-  const [activeTab, setActiveTab] = useState('rent') // 'rent' or 'buy'
+  const [activeTab, setActiveTab] = useState('rent') // 'rent' | 'buy' | 'qr'
   const [selectedTenureMonths, setSelectedTenureMonths] = useState(3)
+  const [qrAmountMode, setQrAmountMode] = useState('original') // 'original' (buyPrice) | 'rent' (effectiveMonthlyRent)
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -27,13 +29,15 @@ export function ProductModal({ item, initialFinish, onClose, onAddToCart }) {
   const totalAccruedInTenure = monthlyEquity * selectedTenureMonths
   const remainingResidual = Math.max(0, item.buyPrice - totalAccruedInTenure)
 
+  const activeQrPrice = qrAmountMode === 'original' ? item.buyPrice : effectiveMonthlyRent
+
   const handleAction = () => {
     onAddToCart({
       item,
       selectedFinish,
-      mode: activeTab,
-      tenureMonths: activeTab === 'rent' ? selectedTenureMonths : null,
-      unitPrice: activeTab === 'rent' ? effectiveMonthlyRent : item.buyPrice,
+      mode: activeTab === 'qr' ? (qrAmountMode === 'original' ? 'buy' : 'rent') : activeTab,
+      tenureMonths: activeTab === 'rent' || (activeTab === 'qr' && qrAmountMode === 'rent') ? selectedTenureMonths : null,
+      unitPrice: activeTab === 'rent' || (activeTab === 'qr' && qrAmountMode === 'rent') ? effectiveMonthlyRent : item.buyPrice,
     })
     onClose()
   }
@@ -128,7 +132,7 @@ export function ProductModal({ item, initialFinish, onClose, onAddToCart }) {
                   className={`acquisition-tab ${activeTab === 'rent' ? 'acquisition-tab--active' : ''}`}
                   onClick={() => setActiveTab('rent')}
                 >
-                  Option A: Rent & Test Aesthetics
+                  Rent (80% Credit)
                 </button>
                 <button
                   type="button"
@@ -137,11 +141,20 @@ export function ProductModal({ item, initialFinish, onClose, onAddToCart }) {
                   className={`acquisition-tab ${activeTab === 'buy' ? 'acquisition-tab--active' : ''}`}
                   onClick={() => setActiveTab('buy')}
                 >
-                  Option B: Buy Outright (₹{item.buyPrice})
+                  Buy (₹{item.buyPrice.toLocaleString('en-IN')})
+                </button>
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={activeTab === 'qr'}
+                  className={`acquisition-tab ${activeTab === 'qr' ? 'acquisition-tab--active' : ''}`}
+                  onClick={() => setActiveTab('qr')}
+                >
+                  Scan & Pay QR ⚡
                 </button>
               </div>
 
-              {activeTab === 'rent' ? (
+              {activeTab === 'rent' && (
                 <div className="acquisition-tab-panel">
                   <label className="tenure-label">Select Rental Commitment:</label>
                   <div className="tenure-pills">
@@ -184,17 +197,52 @@ export function ProductModal({ item, initialFinish, onClose, onAddToCart }) {
                     ✓ Free delivery & assembly · Swap or return hassle-free if your aesthetic changes · Zero long-term debt.
                   </p>
                 </div>
-              ) : (
+              )}
+
+              {activeTab === 'buy' && (
                 <div className="acquisition-tab-panel">
                   <div className="buy-summary-box">
                     <div className="summary-row summary-row--lg">
                       <span>Purchase Price:</span>
-                      <strong className="tabular-nums text-2xl">₹{item.buyPrice}</strong>
+                      <strong className="tabular-nums text-2xl">₹{item.buyPrice.toLocaleString('en-IN')}</strong>
                     </div>
                     <p className="buy-perks">
                       ✓ Direct ownership · 5-year structural warranty · White-glove in-room placement included · 30-day aesthetic satisfaction trial.
                     </p>
                   </div>
+                </div>
+              )}
+
+              {activeTab === 'qr' && (
+                <div className="acquisition-tab-panel qr-tab-panel">
+                  <div className="qr-toggle-subbar">
+                    <button
+                      type="button"
+                      className={`qr-toggle-btn ${qrAmountMode === 'original' ? 'qr-toggle-btn--active' : ''}`}
+                      onClick={() => setQrAmountMode('original')}
+                    >
+                      Original Purchase Price (₹{item.buyPrice.toLocaleString('en-IN')})
+                    </button>
+                    <button
+                      type="button"
+                      className={`qr-toggle-btn ${qrAmountMode === 'rent' ? 'qr-toggle-btn--active' : ''}`}
+                      onClick={() => setQrAmountMode('rent')}
+                    >
+                      Monthly Rent (₹{effectiveMonthlyRent.toLocaleString('en-IN')})
+                    </button>
+                  </div>
+
+                  <PaymentQRCode
+                    amount={activeQrPrice}
+                    productName={`${item.name} (${selectedFinish?.name})`}
+                    payeeVpa="aura.concierge@okhdfcbank"
+                    payeeName="AURA Architecture"
+                    size={200}
+                  />
+
+                  <p className="qr-scan-explain">
+                    📲 When scanned by any UPI scanner (GPay, PhonePe, Paytm, or mobile camera), it automatically reads and shows <strong>₹{activeQrPrice.toLocaleString('en-IN')}</strong> as the amount.
+                  </p>
                 </div>
               )}
 
@@ -204,8 +252,10 @@ export function ProductModal({ item, initialFinish, onClose, onAddToCart }) {
                 onClick={handleAction}
               >
                 {activeTab === 'rent'
-                  ? `Rent Now (₹${effectiveMonthlyRent}/mo)`
-                  : `Purchase Outright (₹${item.buyPrice})`}
+                  ? `Rent Now (₹${effectiveMonthlyRent.toLocaleString('en-IN')}/mo)`
+                  : activeTab === 'buy'
+                  ? `Purchase Outright (₹${item.buyPrice.toLocaleString('en-IN')})`
+                  : `Add to Bag & Proceed (₹${activeQrPrice.toLocaleString('en-IN')})`}
               </button>
             </div>
           </div>
@@ -214,4 +264,3 @@ export function ProductModal({ item, initialFinish, onClose, onAddToCart }) {
     </div>
   )
 }
-

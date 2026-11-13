@@ -1,21 +1,11 @@
-import { useState } from 'react'
-
 export function CartDrawer({
   isOpen,
   onClose,
   cartItems,
   onUpdateQuantity,
   onRemoveItem,
-  onClearCart,
+  onProceedToCheckout,
 }) {
-  const [checkoutStep, setCheckoutStep] = useState('review') // 'review' | 'success'
-  const [formData, setFormData] = useState({
-    name: 'Eleanor Vance',
-    email: 'eleanor.vance@studioarch.com',
-    address: '428 Mercer St, Floor 4, New York, NY',
-    notes: 'Freight elevator accessible. Ring buzzer 4B.',
-  })
-
   if (!isOpen) {
     return null
   }
@@ -32,16 +22,7 @@ export function CartDrawer({
     0
   )
 
-  const handleCheckoutSubmit = (e) => {
-    e.preventDefault()
-    setCheckoutStep('success')
-  }
-
-  const handleDone = () => {
-    onClearCart()
-    setCheckoutStep('review')
-    onClose()
-  }
+  const totalItemsCount = cartItems.reduce((acc, curr) => acc + curr.quantity, 0)
 
   return (
     <div
@@ -58,7 +39,7 @@ export function CartDrawer({
               Your Furniture Bag
             </h2>
             <span className="drawer-count-badge tabular-nums">
-              {cartItems.reduce((acc, curr) => acc + curr.quantity, 0)} items
+              {totalItemsCount} {totalItemsCount === 1 ? 'item' : 'items'}
             </span>
           </div>
           <button
@@ -71,35 +52,11 @@ export function CartDrawer({
           </button>
         </div>
 
-        {checkoutStep === 'success' ? (
-          <div className="checkout-success-view">
-            <div className="success-icon-ring">✓</div>
-            <h3 className="success-title">Order Confirmed & Scheduled!</h3>
-            <p className="success-copy">
-              Thank you, <strong>{formData.name}</strong>. Your white-glove delivery has been reserved for:
-            </p>
-            <div className="success-address-card">
-              <p>{formData.address}</p>
-              <small>Confirmation sent to: {formData.email}</small>
-            </div>
-            <div className="success-reassurance">
-              <p>
-                <strong>The Aesthetic Guarantee:</strong> You will have 30 days to live with your selections. If you decide to keep and buy out your rentals, your accrued equity will automatically apply in your portal.
-              </p>
-            </div>
-            <button
-              type="button"
-              className="btn btn--primary btn--full"
-              onClick={handleDone}
-            >
-              Continue Exploring
-            </button>
-          </div>
-        ) : cartItems.length === 0 ? (
+        {cartItems.length === 0 ? (
           <div className="drawer-empty-state">
             <div className="empty-icon-box" aria-hidden="true">🛋️</div>
             <h3>Your bag is empty</h3>
-            <p>Select furniture from our rental collection or buy catalog to get started.</p>
+            <p>Select pieces from our rental subscription or buy catalog to get started.</p>
             <button
               type="button"
               className="btn btn--primary"
@@ -119,7 +76,10 @@ export function CartDrawer({
                     <small>Billed monthly · 80% Buyout Credit</small>
                   </div>
                   {rentalItems.map((cartItem) => (
-                    <div key={`${cartItem.item.id}-${cartItem.selectedFinish?.id}-rent`} className="cart-item-row">
+                    <div
+                      key={`${cartItem.item.id}-${cartItem.selectedFinish?.id}-rent-${cartItem.tenureMonths}`}
+                      className="cart-item-row"
+                    >
                       <img
                         src={cartItem.selectedFinish?.image || cartItem.item.image}
                         alt={cartItem.item.name}
@@ -131,7 +91,8 @@ export function CartDrawer({
                         <div className="cart-item-title-row">
                           <strong className="cart-item-name">{cartItem.item.name}</strong>
                           <span className="cart-item-price tabular-nums">
-                            ₹{cartItem.unitPrice}<small>/mo</small>
+                            ₹{(cartItem.unitPrice * cartItem.quantity).toLocaleString('en-IN')}
+                            <small>/mo</small>
                           </span>
                         </div>
                         <span className="cart-item-finish">
@@ -179,7 +140,10 @@ export function CartDrawer({
                     <small>Outright ownership · 5-Yr Warranty</small>
                   </div>
                   {buyItems.map((cartItem) => (
-                    <div key={`${cartItem.item.id}-${cartItem.selectedFinish?.id}-buy`} className="cart-item-row">
+                    <div
+                      key={`${cartItem.item.id}-${cartItem.selectedFinish?.id}-buy`}
+                      className="cart-item-row"
+                    >
                       <img
                         src={cartItem.selectedFinish?.image || cartItem.item.image}
                         alt={cartItem.item.name}
@@ -191,7 +155,7 @@ export function CartDrawer({
                         <div className="cart-item-title-row">
                           <strong className="cart-item-name">{cartItem.item.name}</strong>
                           <span className="cart-item-price tabular-nums">
-                            ₹{cartItem.unitPrice * cartItem.quantity}
+                            ₹{(cartItem.unitPrice * cartItem.quantity).toLocaleString('en-IN')}
                           </span>
                         </div>
                         <span className="cart-item-finish">
@@ -237,13 +201,17 @@ export function CartDrawer({
                 {monthlyRentalTotal > 0 && (
                   <div className="total-row">
                     <span>Monthly Rental Total:</span>
-                    <strong className="tabular-nums">₹{monthlyRentalTotal}/month</strong>
+                    <strong className="tabular-nums">
+                      ₹{monthlyRentalTotal.toLocaleString('en-IN')}/mo
+                    </strong>
                   </div>
                 )}
                 {buyTotal > 0 && (
                   <div className="total-row">
                     <span>Outright Purchase Total:</span>
-                    <strong className="tabular-nums">₹{buyTotal}</strong>
+                    <strong className="tabular-nums">
+                      ₹{buyTotal.toLocaleString('en-IN')}
+                    </strong>
                   </div>
                 )}
                 <div className="total-row text-muted-sm">
@@ -253,44 +221,27 @@ export function CartDrawer({
                 <div className="total-row total-row--grand">
                   <span>Initial Due Today:</span>
                   <strong className="tabular-nums text-xl">
-                    ₹{monthlyRentalTotal + buyTotal}
+                    ₹{(monthlyRentalTotal + buyTotal).toLocaleString('en-IN')}
                   </strong>
                 </div>
               </div>
 
-              {/* Quick Mock Delivery Form */}
-              <form onSubmit={handleCheckoutSubmit} className="checkout-quick-form">
-                <div className="form-group-compact">
-                  <label htmlFor="chk-name" className="sr-only">Full Name</label>
-                  <input
-                    id="chk-name"
-                    type="text"
-                    required
-                    className="compact-input"
-                    value={formData.name}
-                    placeholder="Full Name"
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  />
-                </div>
-                <div className="form-group-compact">
-                  <label htmlFor="chk-address" className="sr-only">Delivery Address</label>
-                  <input
-                    id="chk-address"
-                    type="text"
-                    required
-                    className="compact-input"
-                    value={formData.address}
-                    placeholder="Delivery Address"
-                    onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                  />
-                </div>
+              {/* Link bag data directly to Payment and Receipt generation */}
+              <div className="drawer-cta-group">
                 <button
-                  type="submit"
-                  className="btn btn--primary btn--xl btn--full"
+                  type="button"
+                  className="btn btn--primary btn--xl btn--full drawer-checkout-btn"
+                  onClick={() => {
+                    onClose()
+                    onProceedToCheckout(cartItems)
+                  }}
                 >
-                  Confirm Delivery & Complete (₹{monthlyRentalTotal + buyTotal})
+                  Proceed to Payment & Receipt →
                 </button>
-              </form>
+                <small className="drawer-security-hint">
+                  ⚡ Linked to secure payment gateway & instant tax invoice receipt.
+                </small>
+              </div>
             </div>
           </>
         )}
@@ -298,4 +249,3 @@ export function CartDrawer({
     </div>
   )
 }
-

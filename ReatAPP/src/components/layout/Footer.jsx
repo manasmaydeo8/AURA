@@ -40,6 +40,27 @@ export function Footer({ onViewChange }) {
           </div>
 
           <div className="footer-nav-col">
+            <h4 className="footer-heading">Client Portal</h4>
+            <ul className="footer-links">
+              <li>
+                <button type="button" onClick={() => onViewChange('login')}>
+                  Sign In to Account
+                </button>
+              </li>
+              <li>
+                <button type="button" onClick={() => onViewChange('signup')}>
+                  Create Architectural Membership
+                </button>
+              </li>
+              <li>
+                <button type="button" onClick={() => onViewChange('checkout')}>
+                  Checkout & Payment Invoices
+                </button>
+              </li>
+            </ul>
+          </div>
+
+          <div className="footer-nav-col">
             <h4 className="footer-heading">The Aura Standards</h4>
             <ul className="footer-list-text">
               <li>✓ 80% Rent Equity Accrual</li>
@@ -48,19 +69,6 @@ export function Footer({ onViewChange }) {
               <li>✓ Zero-Landfill Circular Lifecycle</li>
               <li>✓ Certified FSC Hardwoods & Recycled Alloys</li>
             </ul>
-          </div>
-
-          <div className="footer-studios-col">
-            <h4 className="footer-heading">Design Studios</h4>
-            <p className="footer-studio-item">
-              <strong>Stockholm:</strong> Birger Jarlsgatan 18
-            </p>
-            <p className="footer-studio-item">
-              <strong>New York:</strong> 428 Mercer St, SoHo
-            </p>
-            <p className="footer-studio-item">
-              <strong>Kyoto:</strong> Nakagyo-ku Sanjo-dori
-            </p>
           </div>
         </div>
 
@@ -78,4 +86,3 @@ export function Footer({ onViewChange }) {
     </footer>
   )
 }
-

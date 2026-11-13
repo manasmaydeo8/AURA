@@ -5,7 +5,17 @@ export function Navbar({
   onOpenCart,
   selectedSpace,
   onSpaceSelect,
+  currentUser,
+  onLogout,
+  onOpenReceipts,
 }) {
+  const getInitials = (name) => {
+    if (!name) return 'U'
+    const parts = name.trim().split(' ')
+    if (parts.length >= 2) return `${parts[0][0]}${parts[1][0]}`.toUpperCase()
+    return name.slice(0, 2).toUpperCase()
+  }
+
   return (
     <header className="site-header">
       <div className="container site-header__inner">
@@ -79,6 +89,54 @@ export function Navbar({
             </button>
           </div>
 
+          {/* User Account Cluster */}
+          {currentUser ? (
+            <div className="user-nav-cluster">
+              <button
+                type="button"
+                className="user-profile-badge"
+                onClick={onOpenReceipts}
+                title={`Signed in as ${currentUser.name} (${currentUser.email}). Click to view tax receipts.`}
+              >
+                <span className="user-avatar-circle">{getInitials(currentUser.name)}</span>
+                <span className="user-name-label">{currentUser.name.split(' ')[0]}</span>
+              </button>
+              <button
+                type="button"
+                className="receipts-nav-btn"
+                onClick={onOpenReceipts}
+                title="View your verified payment receipts & tax invoices"
+              >
+                Receipts 🧾
+              </button>
+              <button
+                type="button"
+                className="logout-nav-btn"
+                onClick={onLogout}
+                title="Sign out of your account"
+              >
+                Exit
+              </button>
+            </div>
+          ) : (
+            <div className="auth-nav-cluster">
+              <button
+                type="button"
+                className={`auth-nav-link ${activeView === 'login' ? 'auth-nav-link--active' : ''}`}
+                onClick={() => onViewChange('login')}
+              >
+                Sign In
+              </button>
+              <button
+                type="button"
+                className={`auth-nav-btn-pill ${activeView === 'signup' ? 'auth-nav-btn-pill--active' : ''}`}
+                onClick={() => onViewChange('signup')}
+              >
+                Sign Up
+              </button>
+            </div>
+          )}
+
           {/* Cart / Bag Button */}
           <button
             type="button"
@@ -103,4 +161,3 @@ export function Navbar({
     </header>
   )
 }
-

@@ -10,17 +10,21 @@ import { BuyListingSection } from './sections/BuyListingSection'
 import { AestheticStorySection } from './sections/AestheticStorySection'
 import { FaqSection } from './sections/FaqSection'
 import { RentToOwnCalculator } from './components/calculator/RentToOwnCalculator'
+import { AuthSection } from './sections/AuthSection'
+import { CheckoutPaymentReceiptSection } from './sections/CheckoutPaymentReceiptSection'
 import { FURNITURE_ITEMS } from './data/furniture'
 import { useReducedMotionPreference } from './hooks/useReducedMotion'
+import { authService } from './services/authService'
 
 function App() {
-  const [activeView, setActiveView] = useState('overview') // 'overview' | 'rent' | 'buy' | 'calculator'
+  const [activeView, setActiveView] = useState('overview') // 'overview' | 'rent' | 'buy' | 'calculator' | 'login' | 'signup' | 'checkout'
   const [selectedSpace, setSelectedSpace] = useState('all') // 'all' | 'home' | 'office'
   const [isCartOpen, setIsCartOpen] = useState(false)
   const [cartItems, setCartItems] = useState([])
   const [modalItem, setModalItem] = useState(null)
   const [modalFinish, setModalFinish] = useState(null)
   const [toastMessage, setToastMessage] = useState(null)
+  const [currentUser, setCurrentUser] = useState(() => authService.getCurrentUser())
 
   // Motion preference hook for accessible animations
   useReducedMotionPreference()
@@ -121,6 +125,28 @@ function App() {
     setCartItems([])
   }
 
+  const handleLogout = () => {
+    authService.logout()
+    setCurrentUser(null)
+    showToast('Signed out of AURA account.')
+  }
+
+  const handleAuthSuccess = (user) => {
+    setCurrentUser(user)
+    showToast(`Signed in as ${user.name}`)
+  }
+
+  const handleProceedToCheckout = () => {
+    setIsCartOpen(false)
+    setActiveView('checkout')
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  const handleOpenReceipts = () => {
+    setActiveView('checkout')
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
   const totalCartCount = cartItems.reduce((acc, curr) => acc + curr.quantity, 0)
 
   return (
@@ -139,6 +165,9 @@ function App() {
         onOpenCart={() => setIsCartOpen(true)}
         selectedSpace={selectedSpace}
         onSpaceSelect={setSelectedSpace}
+        currentUser={currentUser}
+        onLogout={handleLogout}
+        onOpenReceipts={handleOpenReceipts}
       />
 
       <main id="main-content">
@@ -215,6 +244,23 @@ function App() {
         {activeView === 'calculator' && (
           <RentToOwnCalculator onSelectPieceForCart={handleAddToCart} />
         )}
+
+        {(activeView === 'login' || activeView === 'signup') && (
+          <AuthSection
+            initialMode={activeView}
+            onAuthSuccess={handleAuthSuccess}
+            onViewChange={setActiveView}
+          />
+        )}
+
+        {activeView === 'checkout' && (
+          <CheckoutPaymentReceiptSection
+            bagItems={cartItems}
+            currentUser={currentUser}
+            onClearBag={handleClearCart}
+            onViewChange={setActiveView}
+          />
+        )}
       </main>
 
       <Footer onViewChange={setActiveView} />
@@ -226,7 +272,7 @@ function App() {
         cartItems={cartItems}
         onUpdateQuantity={handleUpdateQuantity}
         onRemoveItem={handleRemoveItem}
-        onClearCart={handleClearCart}
+        onProceedToCheckout={handleProceedToCheckout}
       />
 
       {/* Aesthetic Detail & Acquisition Modal */}
